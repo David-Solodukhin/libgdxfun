@@ -3,10 +3,13 @@ package com.dookin.states;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.PolygonRegion;
 import com.badlogic.gdx.graphics.g2d.PolygonSprite;
 import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
@@ -30,11 +33,15 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.joints.MouseJoint;
 import com.badlogic.gdx.physics.box2d.joints.MouseJointDef;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.dookin.Asteroid;
 import com.dookin.CollisionListener;
 import com.dookin.GestureListener;
 import com.dookin.Utils;
 import com.dookin.managers.GameStateManager;
+
+import java.util.Arrays;
+import java.util.HashMap;
 
 import box2dLight.PointLight;
 import box2dLight.RayHandler;
@@ -71,8 +78,14 @@ public class PlayState extends GameState{
     Texture textureSolid;
     Texture textureTree;
     private Sprite ts;
-
     private PolygonRegion region;
+    GlyphLayout layout; //dont do this every frame! Store it as member
+
+    BitmapFont font;
+    BitmapFont highlightFont;
+    HashMap<Integer, String[]> words = new HashMap<>();
+    long time;
+    private int currentLongest = 2;
 
     public PlayState(GameStateManager gsm) {
         super(gsm);
@@ -145,8 +158,46 @@ public class PlayState extends GameState{
         Gdx.input.setInputProcessor(new GestureListener(world, mousej, mousejd, camera, player));
         region = new PolygonRegion(new TextureRegion(textureSolid), new float[] {0, 0, Utils.m2p(10), Utils.m2p(10), (Utils.m2p(10)), 0}, new short[] {0, 1,2});
         polyBatch = new PolygonSpriteBatch();
+        Music music = Gdx.audio.newMusic(Gdx.files.internal("dont.mp3"));
+        music.setLooping(true);
+        music.play();
+        /* Text Stuff */
+        font = new BitmapFont();
+        highlightFont = new BitmapFont();
+        highlightFont.setColor(Color.RED);
+
+        font.setColor(Color.WHITE);
+        time = TimeUtils.millis();
+        layout = new GlyphLayout();
+        words.put(0, new String[]{"tonight", "2"});
+        //words.put(1, "tonight");
+        words.put(2, new String[]{"i'm gonna have", "3"});
+        words.put(3, new String[]{"myself", "5"});
+        words.put(5, new String[]{"a really good time", "7"});
+        words.put(7, new String[]{"i feel alive", "12"});
+        words.put(12, new String[]{"and the world", "15"});
+        words.put(15, new String[]{"i'll turn it", "16"});
+        words.put(16, new String[]{"inside out", "19"});
+        words.put(19, new String[]{"yeah", "20"});
+        words.put(20, new String[]{"and floating around", "22"});
+        words.put(22, new String[]{"in ecstasy", "25"});
+        words.put(25, new String[]{"So don't", "26"});
+        words.put(26, new String[]{"stop me", "27"});
+        words.put(27, new String[]{"now", "29"});
+        words.put(29, new String[]{"don't", "31"});
+        words.put(31, new String[]{"stop me", "32"});
+        words.put(32, new String[]{"cause i'm having", "33"});
 
 
+
+
+
+
+
+
+
+
+        //words.put(4, "myself");
 
 
     }
@@ -292,7 +343,50 @@ public class PlayState extends GameState{
         rayHandler.updateAndRender();
 
         updateInput(); //unfortunately because of precedence
-        System.out.println(stob2d(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0)));
+        //System.out.println(stob2d(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0)));
+
+        /* text stuff */
+
+        batch.setProjectionMatrix(camera.projection); //static on screen
+
+        //System.out.println(time);
+        int timeSince = (int)(TimeUtils.timeSinceMillis((time)) / 1000F);
+        //System.out.println((int)timeSince);
+        float currentStart = -Gdx.graphics.getWidth() / 2f;
+        //layout.setText(font, words.getOrDefault(timeSince, ""));
+        //font.draw(batch, layout, currentStart, Gdx.graphics.getHeight()/2 - 10);
+        String[] currentWord = null;
+        for (int i = timeSince - 5/*currentLongest*/; i < timeSince + 5; i++) { //every frame, loop through 5 second time period, if there's a word in that time period s.t. the current time is in it's range, draw it red, otherwise, draw the word white
+            String[] tmpWord = words.get(i);
+            //System.out.println("current time: " + timeSince + " i: " + i + " " + "should be lowest i: " + Math.abs(timeSince - currentLongest) + " currentLongest: " + currentLongest + " " + (tmpWord == null ? "null" : tmpWord[0]));
+
+            if (tmpWord == null) {
+                continue;
+            }
+            currentLongest = Math.max(currentLongest, Math.abs(Integer.parseInt(tmpWord[1]) - i));
+
+            if (timeSince >= i && timeSince < Integer.parseInt(tmpWord[1])) {
+                layout.setText(highlightFont, tmpWord[0]);
+                batch.begin();
+                highlightFont.draw(batch, layout, currentStart, Gdx.graphics.getHeight()/2 - 10);
+                batch.end();
+            } else {
+                layout.setText(font, tmpWord[0]);
+                batch.begin();
+                font.draw(batch, layout, currentStart, Gdx.graphics.getHeight()/2 - 10);
+                batch.end();
+            }
+
+
+            currentStart += layout.width + 5;
+        }
+
+
+
+
+       // batch.end();
+
+
 
     }
 

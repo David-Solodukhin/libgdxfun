@@ -2,6 +2,7 @@ package com.dookin.managers;
 
 import com.dookin.MindGame;
 import com.dookin.states.GameState;
+import com.dookin.states.MusicState;
 import com.dookin.states.PlayState;
 import com.dookin.states.SplashState;
 
@@ -18,7 +19,8 @@ public class GameStateManager {
     public enum state {
         SPLASH,
         MAINMENU,
-        GAME
+        GAME,
+        MUSIC,
     }
     public GameStateManager(final MindGame app) {
         this.app = app;
@@ -59,6 +61,7 @@ public class GameStateManager {
             }
 
             case GAME: return new PlayState(this);
+            case MUSIC: return new MusicState(this);
         }
         return null;
     }

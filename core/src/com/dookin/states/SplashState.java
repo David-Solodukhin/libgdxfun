@@ -41,6 +41,9 @@ public class SplashState extends GameState{
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isTouched()) {
             gsm.setState(GameStateManager.state.GAME);
         }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isTouched()) {
+            gsm.setState(GameStateManager.state.MUSIC);
+        }
     }
 
     @Override
