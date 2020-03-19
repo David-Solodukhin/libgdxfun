@@ -189,11 +189,11 @@ public class WaterState extends GameState{
 
         /* circle test */
         CircleShape circle = new CircleShape();
-        circle.setRadius(0.5f);
+        circle.setRadius(0.3f);
 
         BodyDef def = new BodyDef();
         def.type = BodyDef.BodyType.DynamicBody;
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 500; i++) {
             def.position.set(0,stob2d(new Vector3(i, Gdx.graphics.getHeight() - i,0)).y);
             Body circleBody;
             circleBody = world.createBody(def);
@@ -201,7 +201,7 @@ public class WaterState extends GameState{
             //circleBody.setBullet(true);
             circleBody.createFixture(circle, 1.0f);
 
-            PointLight circleLight = new PointLight(rayHandler, 10, new Color(.3f,.25f, .71f,0.9f), 1.7f, 0, 0);
+            PointLight circleLight = new PointLight(rayHandler, 10, new Color(.3f,.25f, .71f,0.9f), 0.7f, 0, 0);
             circleLight.setXray(true);
             circleLight.setSoftnessLength(0.0f);
             circleLight.setSoft(true);
@@ -378,8 +378,10 @@ public class WaterState extends GameState{
     private void updateInput() {
         /*this input is only for changing states or gamewide info*/
         if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
-            gsm.setState(GameStateManager.state.GAME);
+            gsm.setState(GameStateManager.state.WATER);
         }
+        b2dr.setDrawBodies(Gdx.input.isKeyPressed(Input.Keys.SPACE));
+
     }
 
     public Body createPlayer(float x, float y) {

@@ -19,7 +19,6 @@ public class GameStateManager {
 
     public enum state {
         SPLASH,
-        MAINMENU,
         GAME,
         MUSIC,
         WATER,
