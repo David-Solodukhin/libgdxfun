@@ -32,7 +32,6 @@ public class SplashState extends GameState{
             camera.setToOrtho(false,Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2);
             return;
         }
-        System.out.println(Gdx.graphics.getWidth() + " " + Gdx.graphics.getHeight());
         camera.setToOrtho(false,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
@@ -43,6 +42,9 @@ public class SplashState extends GameState{
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isTouched()) {
             gsm.setState(GameStateManager.state.MUSIC);
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.W) || Gdx.input.isTouched()) {
+            gsm.setState(GameStateManager.state.WATER);
         }
     }
 

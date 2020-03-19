@@ -17,6 +17,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
@@ -40,14 +41,13 @@ import com.dookin.GestureListener;
 import com.dookin.Utils;
 import com.dookin.managers.GameStateManager;
 
-import java.util.Arrays;
 import java.util.HashMap;
 
 import box2dLight.PointLight;
 import box2dLight.RayHandler;
 
 
-public class PlayState extends GameState{
+public class WaterState extends GameState{
 
 
     SpriteBatch batch;
@@ -87,7 +87,7 @@ public class PlayState extends GameState{
     long time;
     private int currentLongest = 2;
 
-    public PlayState(GameStateManager gsm) {
+    public WaterState(GameStateManager gsm) {
         super(gsm);
         create();
 
@@ -106,28 +106,28 @@ public class PlayState extends GameState{
 
         textureSolid.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         img = new Texture("bg3.jpg");
-        playerSprite = new Sprite(new Texture("tnt.png"));
+        playerSprite = new Sprite(new Texture("boat.png"));
         planetSprite = new Sprite(new Texture("bplanet.png"));
         sunSprite = new Sprite(new Texture("moon.png"));
         img.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         camera = new OrthographicCamera();
         camera.setToOrtho(false,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		/*  box2d setup */
-        gravity = new Vector2(0,0);
+        gravity = new Vector2(0,-9.8f);
         world = new World(gravity, false);
         b2dr = new Box2DDebugRenderer();
         player = createPlayer(0,0);
         //platform  = createPlatform();
         srend.setAutoShapeType(true);
-        planet = createPlanet(stob2d(new Vector3(0,Gdx.graphics.getHeight(),0)).x,stob2d(new Vector3(0,Gdx.graphics.getHeight(),0)).y ,10f);
+        //planet = createPlanet(stob2d(new Vector3(0,Gdx.graphics.getHeight(),0)).x,stob2d(new Vector3(0,Gdx.graphics.getHeight(),0)).y ,10f);
         //createPlanet(stob2d(new Vector3(0,Gdx.graphics.getHeight(),0)).x,stob2d(new Vector3(0,Gdx.graphics.getHeight(),0)).y ,10f);
-        sun = createPlanet(20,20, 6f);
+        sun = createPlanet(0,5, 6f);
         sun.setActive(false);
         rayHandler = new RayHandler(world);
         rayHandler.setAmbientLight(.4f);
-        myLight = new PointLight(rayHandler, 300, Color.RED, 50/Utils.PPM, 0, 0);
+        myLight = new PointLight(rayHandler, 100, Color.GREEN, 3.0f, 0, 0);
         planetLight = new PointLight(rayHandler, 100, Color.CYAN, 35f, sun.getPosition().x - 2f, sun.getPosition().y);
-        planetLight.setXray(true);
+        planetLight.setXray(false);
         //rayHandler.setBlurNum(2);
         planetLight.setSoft(true);
         //planetLight.setSoft(true);
@@ -136,14 +136,13 @@ public class PlayState extends GameState{
         //myLight.setXray(true);
         //rayHandler.setCombinedMatrix(camera.combined.scl(Utils.PPM));
         myLight.attachToBody(player);
-        b2dr.setDrawBodies(false);
         cameraUpdate();
         //since camera always follows player, we're drawing the thing on top of the player since player is always in the center of camera
-        testAsteroid = new Asteroid(stob2d(new Vector3(20, 20, 0)), world, 1,5, null, rayHandler);
-        testAsteroid2 = new Asteroid(new Vector3(20,20,0), world, 1,5, null, rayHandler);
+        //testAsteroid = new Asteroid(stob2d(new Vector3(20, 20, 0)), world, 1,5, null, rayHandler);
+        //testAsteroid2 = new Asteroid(new Vector3(20,20,0), world, 1,5, null, rayHandler);
 
-        createPlayer(-20,-20);
-        createTree(5, (float)Math.sqrt(75),0);
+        //createPlayer(-20,-20);
+        //createTree(5, (float)Math.sqrt(75),0);
         //Sprite TreeSprite = new Sprite(textureTree);
         //TreeSprite.setOriginCenter();
         //TreeSprite.setOrigin();
@@ -188,11 +187,68 @@ public class PlayState extends GameState{
         words.put(31, new String[]{"stop me", "32"});
         words.put(32, new String[]{"cause i'm having", "33"});
 
+        /* circle test */
+        CircleShape circle = new CircleShape();
+        circle.setRadius(0.5f);
+
+        BodyDef def = new BodyDef();
+        def.type = BodyDef.BodyType.DynamicBody;
+        for (int i = 0; i < 200; i++) {
+            def.position.set(0,stob2d(new Vector3(i, Gdx.graphics.getHeight() - i,0)).y);
+            Body circleBody;
+            circleBody = world.createBody(def);
+            circleBody.setSleepingAllowed(true);
+            //circleBody.setBullet(true);
+            circleBody.createFixture(circle, 1.0f);
+
+            PointLight circleLight = new PointLight(rayHandler, 10, new Color(.3f,.25f, .71f,0.9f), 1.7f, 0, 0);
+            circleLight.setXray(true);
+            circleLight.setSoftnessLength(0.0f);
+            circleLight.setSoft(true);
+            circleLight.attachToBody(circleBody);
+        }
+
+        /*bottom */
+
+        def.type = BodyDef.BodyType.StaticBody;
+
+
+
+        /*tells us the scale ratio for screen scale to b2d scale: it's not just 1:PPM! */
+        float screenToB2DScaleX = ((float)Gdx.graphics.getWidth()) / (camera.unproject(new Vector3(Gdx.graphics.getWidth(), 0, 0))).scl(1f/Utils.PPM).x;
+        float screenToB2DScaleY = -1 * ((float)Gdx.graphics.getHeight()) / (camera.unproject(new Vector3(0, Gdx.graphics.getHeight(), 0))).scl(1f/Utils.PPM).y;
+        System.out.println(screenToB2DScaleY);
+        //scale might be faster than calling unproject all the time?
+
+
+
+        cameraUpdate();
+        //looks like unproject assumes the following coordinate system for the screen: far left: x = 0, far right, x=Gdx.graphics.getWidth(), bottom: y=Gdx.graphics.getHeight(), top y=0.
+        // also looks like drawing with sprite batches operates at coordinate system similar to box2d and unlike what unproject assumes?
+        def.position.set(0,stob2d(new Vector3(0, Gdx.graphics.getHeight(),0)).y);
+        PolygonShape platformShape = new PolygonShape();
+        platformShape.setAsBox(stob2d(new Vector3(Gdx.graphics.getWidth(),0,0)).x, 1);
+        Body platformBody = world.createBody(def);
+        platformBody.createFixture(platformShape, 3.0f);
+
+        def.position.set(stob2d(new Vector3(0, 0,0)).x,0);
+        platformShape.setAsBox(1,Gdx.graphics.getHeight() / screenToB2DScaleY);
+        Body leftBody = world.createBody(def);
+        leftBody.createFixture(platformShape, 3.0f);
+
+        def.position.set(stob2d(new Vector3(Gdx.graphics.getWidth(), 0,0)).x, 0);
+        platformShape.setAsBox(1,Gdx.graphics.getHeight() / screenToB2DScaleY);
+        Body rightBody = world.createBody(def);
+        rightBody.createFixture(platformShape, 3.0f);
 
 
 
 
-
+        b2dr.setDrawAABBs(false);
+        b2dr.setDrawContacts(false);
+        b2dr.setDrawInactiveBodies(false);
+        b2dr.setDrawJoints(true);
+        b2dr.setDrawBodies(false);
 
 
 
@@ -209,7 +265,7 @@ public class PlayState extends GameState{
             camera.setToOrtho(false,Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2);
             return;
         }
-        System.out.println(Gdx.graphics.getWidth() + " " + Gdx.graphics.getHeight());
+        System.out.println("RESIZE " + Gdx.graphics.getWidth() + " " + Gdx.graphics.getHeight());
         camera.setToOrtho(false,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
@@ -219,31 +275,14 @@ public class PlayState extends GameState{
 
 
 //each planet should have an update method with a query AABB for its shit
-        float r = ((CircleShape)planet.getFixtureList().get(0).getShape()).getRadius();
 
 
         //world.QueryAABB(nut, planet.getPosition().x-(r * 2), planet.getPosition().y-(r * 2), planet.getPosition().x+(r * 2), planet.getPosition().y+(r * 2));
 
-        Array<Fixture> fixtures = new Array<Fixture>();
-        world.getFixtures(fixtures);
-        for (Fixture fix: fixtures) {
-            applyGravForceToCenter(fix);
-        }
+
         world.step(1/60f, 10, 6);
         //planet.setTransform(0,0, 0);
         cameraUpdate(); //camera's orthographic x and y world coords in pixels are set to player's coords in pixels
-        //camera.combined.scl(1f/Utils.PPM);
-
-        //RAYHANDLER UPDATE GARBAGE: literally magic, i don't know why scaling works
-        //camera.combined.scl(Utils.PPM); // i don't know why we scale PPM instead of 1/PPM
-        //rayHandler.setCombinedMatrix(camera.combined.cpy().scl(Utils.PPM));
-        //rayHandler.setCombinedMatrix(camera);
-        //rayHandler.update();
-        //camera.combined.scl(1f/Utils.PPM);
-        //cameraUpdate();
-
-        objectCleanup();
-        //--------------------------
 
         //combined matrix contains the view matrix(where shit is in your 3d world)
         //as well as the projection matrix(how do we map the shit in the 3d world to a 2d plane(the camera)
@@ -270,17 +309,19 @@ public class PlayState extends GameState{
         ((PolygonShape)player.getFixtureList().get(0).getShape()).getVertex(1,rvec );
         float sz = lvec.sub(rvec).len();
 
+
+        //playerSprite.setOriginCenter();
         playerSprite.setSize(Utils.m2p(sz),Utils.m2p(sz));
         //Vector3 test = camera.project(new Vector3((player.getWorldCenter().x), (player.getWorldCenter().y), 0));
-        playerSprite.setCenter(Utils.m2p(player.getWorldCenter().x),Utils.m2p(player.getWorldCenter().y));
-        playerSprite.setOriginCenter();
+
+        playerSprite.setCenter(Utils.m2p(player.getWorldCenter().x),Utils.m2p(player.getWorldCenter().y+1f));
+        playerSprite.setOrigin(playerSprite.getWidth() / 2,playerSprite.getHeight() /2 - Utils.m2p(1));
+
+        //playerSprite.setPosition(Utils.m2p(player.getPosition().x),Utils.m2p(player.getPosition().y));
+        playerSprite.setRotation(player.getAngle()* MathUtils.radDeg);
 
 
-        playerSprite.setRotation(player.getAngle()* MathUtils.radDeg - 90);
         //sprite batch is drawn in world coords with camera.combined projection matrix?
-
-        planetSprite.setCenter(Utils.m2p(planet.getPosition().x), Utils.m2p(planet.getPosition().y));
-        planetSprite.setSize(Utils.m2p(((CircleShape)planet.getFixtureList().get(0).getShape()).getRadius() * 2.1f), Utils.m2p(((CircleShape)planet.getFixtureList().get(0).getShape()).getRadius() * 2.1f));
 
 
 
@@ -290,96 +331,22 @@ public class PlayState extends GameState{
 
 
         sunSprite.draw(batch);
-        batch.end();
-        PolygonSprite sp = new PolygonSprite(region);
-        //sp.setOrigin(Utils.m2p(player.getPosition().x), Utils.m2p(player.getPosition().y));
-        //sp.setBounds(10,10,10,10);
-        sp.setPosition(Utils.m2p(player.getPosition().x), Utils.m2p(player.getPosition().y));
-        sp.setOrigin(0,0);
-        sp.setRotation(player.getAngle()* MathUtils.radDeg - 90);
-        //sp.setSize(1f,100f);
-        polyBatch.setProjectionMatrix(camera.combined);
-        polyBatch.setColor(Color.CYAN);
-        polyBatch.begin();
-        //polyBatch.draw(region,Utils.m2p(player.getWorldCenter().x),Utils.m2p(player.getWorldCenter().y), 500,500);
-        //sp.draw(polyBatch);
-
-        testAsteroid.renderPolygon(polyBatch);
-        testAsteroid2.renderPolygon(polyBatch);
-        polyBatch.end();
-        batch.begin();
         playerSprite.draw(batch);
-        planetSprite.draw(batch);
-        ts.draw(batch);
-
-        float r = ((CircleShape)planet.getFixtureList().get(0).getShape()).getRadius();
-
         batch.end();
 
 
         b2dr.render(world, camera.combined.scl(Utils.PPM)); //scaled by ppm since camera is in pixels and 1 meter is 32 pixels so meters -> pixels *=32 //camera.combined matrix is scaled by ppm
 
 
-
-        PolygonSprite poly;
-
-
-// Creating the color filling (but textures would work the same way)
-        //Pixmap pix = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        //pix.setColor(0xDEADBEFF); // DE is red, AD is green and BE is blue.
-        //pix.fill();
-
-
-
-
-        //srend.setProjectionMatrix(batch.getProjectionMatrix());
-        //srend.begin(ShapeRenderer.ShapeType.Line);
-        //srend.polygon(testAsteroid.vertices);
-
-        //srend.end();
-
-
         rayHandler.setCombinedMatrix(camera.combined); //camera combined was already scaled. //not really deprecated since calling setCombinedMatrix(camera) is essentially the same but for some reason breaks
         rayHandler.updateAndRender();
 
         updateInput(); //unfortunately because of precedence
-        //System.out.println(stob2d(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0)));
+
 
         /* text stuff */
 
-        batch.setProjectionMatrix(camera.projection); //static on screen
 
-        //System.out.println(time);
-        int timeSince = (int)(TimeUtils.timeSinceMillis((time)) / 1000F);
-        //System.out.println((int)timeSince);
-        float currentStart = -Gdx.graphics.getWidth() / 2f;
-        //layout.setText(font, words.getOrDefault(timeSince, ""));
-        //font.draw(batch, layout, currentStart, Gdx.graphics.getHeight()/2 - 10);
-        String[] currentWord = null;
-        for (int i = timeSince - 5/*currentLongest*/; i < timeSince + 5; i++) { //every frame, loop through 5 second time period, if there's a word in that time period s.t. the current time is in it's range, draw it red, otherwise, draw the word white
-            String[] tmpWord = words.get(i);
-            //System.out.println("current time: " + timeSince + " i: " + i + " " + "should be lowest i: " + Math.abs(timeSince - currentLongest) + " currentLongest: " + currentLongest + " " + (tmpWord == null ? "null" : tmpWord[0]));
-
-            if (tmpWord == null) {
-                continue;
-            }
-            currentLongest = Math.max(currentLongest, Math.abs(Integer.parseInt(tmpWord[1]) - i));
-
-            if (timeSince >= i && timeSince < Integer.parseInt(tmpWord[1])) {
-                layout.setText(highlightFont, tmpWord[0]);
-                batch.begin();
-                highlightFont.draw(batch, layout, currentStart, Gdx.graphics.getHeight()/2 - 10);
-                batch.end();
-            } else {
-                layout.setText(font, tmpWord[0]);
-                batch.begin();
-                font.draw(batch, layout, currentStart, Gdx.graphics.getHeight()/2 - 10);
-                batch.end();
-            }
-
-
-            currentStart += layout.width + 5;
-        }
 
 
 
@@ -422,17 +389,18 @@ public class PlayState extends GameState{
         BodyDef def = new BodyDef(); //body definition, describes physical properties body will have.
         //friction, type of body, etc
         def.type = BodyDef.BodyType.DynamicBody;
-        def.angle = 90 * MathUtils.degRad;
+        //def.angle = 90 * MathUtils.degRad;
         def.position.set(x,y); //b2d world coords
         //def.fixedRotation = true; //no rotations
         pBody = world.createBody(def);//actually create body.
         //STEP 2, CREATE SHAPE
         PolygonShape shape = new PolygonShape();
+        shape.set(new float[]{-2,1,2,1,-1,-0.5f,1,-0.5f});
         //box 2d works in meters. pixels per meter is important
         //shape.set(new float[]{0,0,1,0,0.5f,1});
-        shape.setAsBox(Utils.p2m(32.0f/2.0f), Utils.p2m(32.0f/2.0f)); //box2d takes height and width from center. so actual width is 16 * 2 = 32
+        //shape.setAsBox(2, 1); //box2d takes height and width from center. so actual width is 16 * 2 = 32
         //STEP 3 ASSIGN FIXTURE TO BODY
-        pBody.createFixture(shape, 3.0f);
+        pBody.createFixture(shape, 1f);
         //pBody.getFixtureList().get(0).setRestitution(0); //the fixture is attached to the shape and gives it a density
         //pBody.getFixtureList().get(0).setFriction(0);
 
@@ -589,7 +557,6 @@ public class PlayState extends GameState{
             if (flt.isNaN()) {
                 System.out.println(fixture.getBody() == dplanet);
             }
-            //System.out.println(plan2Deb); //static bodies do not have mass : /
 
             fixture.getBody().applyForceToCenter(plan2Deb, true);
             //fixture.getBody().applyLinearImpulse(plan2Deb, fixture.getBody().getLocalCenter(), true);
@@ -623,17 +590,7 @@ public class PlayState extends GameState{
         plan2DebMax.scl((1f/(mindist * mindist))*rad * fixture.getBody().getMass() * 10f);
         fixture.getBody().applyForceToCenter(plan2Deb, true);
 
-        //if gravity vector is basically the max, just cut velocity of the fixture
-        //System.out.println(fixture.getBody().getLinearVelocity().len()); //static bodies do not have mass : /
-        /*if (fixture.getBody() != player)
-        System.out.println(plan2Deb.len() + " " + plan2DebMax.len() + " " + fixture.getShape().getRadius());
-        //if (fixture.getUserData() == null || ((boolean)fixture.getUserData() == false && fixture.getBody().getLinearVelocity().len() > 0.001f)) {
-        if (Math.abs(plan2Deb.len()/plan2DebMax.len()) <.97f) {
-        } else {
-            //fixture.getBody().setAngularVelocity(0);
-            fixture.getBody().setLinearVelocity(0,0);
-        }
-        */
+
         if (fixture.getBody().getAngularVelocity() < 0.5f) {
             fixture.getBody().setAngularVelocity(0);
         }
