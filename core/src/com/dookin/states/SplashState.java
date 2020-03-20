@@ -33,14 +33,9 @@ public class SplashState extends GameState{
 
     @Override
     public void resize(int w, int h) {
-        if (Gdx.app.getType().equals(Application.ApplicationType.Android)) {
-            System.out.println(Gdx.graphics.getWidth() + " " + Gdx.graphics.getHeight());
-            camera.setToOrtho(false,Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2);
-            return;
-        }
-        System.out.println(w + " " + h);
-        System.out.println(Gdx.graphics.getWidth() + " " + Gdx.graphics.getHeight());
-        System.out.println("---------"); //how do the chain of resizes work???   first MindGame class detects resize, then for some reason, all states resize w/2 h/2??
+        //System.out.println(w + " " + h);
+        //System.out.println(Gdx.graphics.getWidth() + " " + Gdx.graphics.getHeight());
+        //System.out.println("---------"); //how do the chain of resizes work???   first MindGame class detects resize, then for some reason, all states resize w/2 h/2??
 
         camera.setToOrtho(false,w, h);
 

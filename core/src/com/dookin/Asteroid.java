@@ -149,21 +149,15 @@ public class Asteroid {
 
     public void renderPolygon(PolygonSpriteBatch polyBatch) {
         for (Body b: bodies) {
-            PolygonRegion region = ((PolygonRegion)b.getFixtureList().get(0).getUserData());
-            PolygonSprite sp = new PolygonSprite(region);
+            PolygonSprite sp = ((PolygonSprite)b.getFixtureList().get(0).getUserData());
             //sp.setOrigin(Utils.m2p(player.getPosition().x), Utils.m2p(player.getPosition().y));
             //sp.setBounds(10,10,10,10);
             sp.setPosition(Utils.m2p(b.getPosition().x), Utils.m2p(b.getPosition().y));
             sp.setOrigin(0,0);
 
             sp.setRotation(b.getAngle()* MathUtils.radDeg - 90);
-            //sp.setSize(1f,100f);
-            //polyBatch.setProjectionMatrix(camera.combined);
-            //polyBatch.setColor(Color.CYAN);
-            //polyBatch.begin();
-            //polyBatch.draw(region,Utils.m2p(player.getWorldCenter().x),Utils.m2p(player.getWorldCenter().y), 500,500);
+
             sp.draw(polyBatch);
-            //polyBatch.end();
         }
 
     }
@@ -215,13 +209,17 @@ public class Asteroid {
             poly.set(tmp);
 
             PolygonRegion region = new PolygonRegion(new TextureRegion(textureSolid), regionArray, new short[] {0, 1,2});
+            PolygonSprite sp = new PolygonSprite(region);
+            sp.setOrigin(0,0);
             //System.out.println(Arrays.toString(regionArray));
-            result.add(createFromShape(poly, region));
+            Body tmpBody = createFromShape(poly);
+            tmpBody.getFixtureList().get(0).setUserData(sp);
+            result.add(tmpBody);
         }
         poly.dispose();
         return result;
     }
-    public Body createFromShape(Shape s, PolygonRegion region) {
+    public Body createFromShape(Shape s) {
         Body pBody;
 
         BodyDef def = new BodyDef();
@@ -232,7 +230,7 @@ public class Asteroid {
         pBody.setSleepingAllowed(false);
         pBody.createFixture(s, 3.0f);
         //pBody.getFixtureList().get(0).setUserData(new Sprite(new Texture("bird.png")));
-        pBody.getFixtureList().get(0).setUserData(region);
+
        //pBody.getFixtureList().get(0).setFriction(0f);
         //pBody.getFixtureList().get(0).setRestitution(0);
         pBody.setBullet(true);
@@ -399,7 +397,7 @@ multiple unwelded bodies may touch at the same point, they collide which breaks 
             goober[5] = vertices[(doop.get(i + 2) * 2) + 1];
 
             nut.set(goober);
-            tmp.add(createFromShape(nut, null));
+            tmp.add(createFromShape(nut));
             //System.out.println(Arrays.toString(goober));
 
         }

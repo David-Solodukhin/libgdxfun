@@ -127,7 +127,7 @@ public class WaterState extends GameState{
         rayHandler.setAmbientLight(.4f);
         myLight = new PointLight(rayHandler, 100, Color.GREEN, 3.0f, 0, 0);
         planetLight = new PointLight(rayHandler, 100, Color.CYAN, 35f, sun.getPosition().x - 2f, sun.getPosition().y);
-        planetLight.setXray(false);
+        planetLight.setXray(true);
         //rayHandler.setBlurNum(2);
         planetLight.setSoft(true);
         //planetLight.setSoft(true);
@@ -189,17 +189,19 @@ public class WaterState extends GameState{
 
         /* circle test */
         CircleShape circle = new CircleShape();
-        circle.setRadius(0.3f);
+        circle.setRadius(0.1f);
 
         BodyDef def = new BodyDef();
         def.type = BodyDef.BodyType.DynamicBody;
-        for (int i = 0; i < 500; i++) {
+        for (int i = 0; i < 1000; i++) {
             def.position.set(0,stob2d(new Vector3(i, Gdx.graphics.getHeight() - i,0)).y);
             Body circleBody;
             circleBody = world.createBody(def);
             circleBody.setSleepingAllowed(true);
             //circleBody.setBullet(true);
-            circleBody.createFixture(circle, 1.0f);
+            Fixture circleFixture = circleBody.createFixture(circle, 3.0f);
+            circleFixture.setFriction(0.01f);
+            circleFixture.setRestitution(0.1f);
 
             PointLight circleLight = new PointLight(rayHandler, 10, new Color(.3f,.25f, .71f,0.9f), 0.7f, 0, 0);
             circleLight.setXray(true);
@@ -402,7 +404,7 @@ public class WaterState extends GameState{
         //shape.set(new float[]{0,0,1,0,0.5f,1});
         //shape.setAsBox(2, 1); //box2d takes height and width from center. so actual width is 16 * 2 = 32
         //STEP 3 ASSIGN FIXTURE TO BODY
-        pBody.createFixture(shape, 1f);
+        pBody.createFixture(shape, 0.2f); //maybe set restitution and friction?
         //pBody.getFixtureList().get(0).setRestitution(0); //the fixture is attached to the shape and gives it a density
         //pBody.getFixtureList().get(0).setFriction(0);
 
