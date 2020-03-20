@@ -79,6 +79,7 @@ public class PlayState extends GameState{
     Texture textureTree;
     private Sprite ts;
     private PolygonRegion region;
+    float initZoom = 0.5f;
     GlyphLayout layout; //dont do this every frame! Store it as member
 
     BitmapFont font;
@@ -112,6 +113,13 @@ public class PlayState extends GameState{
         img.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         camera = new OrthographicCamera();
         camera.setToOrtho(false,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        if (Gdx.app.getType().equals(Application.ApplicationType.Android)) {
+            camera.zoom = (0.25f);
+        } else {
+            camera.zoom= 0.5f;
+        }
+
+
 		/*  box2d setup */
         gravity = new Vector2(0,0);
         world = new World(gravity, false);
@@ -204,13 +212,8 @@ public class PlayState extends GameState{
 
     @Override
     public void resize(int w, int h) {
-        if (Gdx.app.getType().equals(Application.ApplicationType.Android)) {
-            System.out.println(Gdx.graphics.getWidth() + " " + Gdx.graphics.getHeight());
-            camera.setToOrtho(false,Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2);
-            return;
-        }
         System.out.println(Gdx.graphics.getWidth() + " " + Gdx.graphics.getHeight());
-        camera.setToOrtho(false,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera.setToOrtho(false,w, h);
     }
 
     @Override
@@ -563,6 +566,14 @@ public class PlayState extends GameState{
         Vector3 position = camera.position;
         position.x = Math.round(player.getPosition().x * Utils.PPM);
         position.y = Math.round(player.getPosition().y * Utils.PPM);
+        //System.out.println(camera.zoom + " " + player.getLinearVelocity().len2() * .01f);
+        //camera.zoom = initZoom + (player.getLinearVelocity().len2() * .001f);
+        Vector2 comps = player.getWorldCenter().sub(planet.getWorldCenter());
+        //y=(comps.y/comps.x)(x-player.getWorldCenter().x)+player.getWorldCenter().y = sqrt(x^2-100)
+        //float (comps.y) / comps.x +
+
+
+        camera.zoom = initZoom + ((player.getWorldCenter().sub(planet.getWorldCenter()).len()-10) * 0.01f);
         camera.position.set(position);
         camera.update();
     }

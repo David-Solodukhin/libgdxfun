@@ -14,10 +14,6 @@ public class MindGame extends ApplicationAdapter {
 	@Override
 	public void create () {
 		gsm = new GameStateManager(this);
-		//gsm.setState(GameStateManager.state.SPLASH);
-
-
-		//myLight.attachToBody(player);
 	}
 
 
@@ -33,8 +29,7 @@ public class MindGame extends ApplicationAdapter {
 
 	@Override
 	public void resize(int width, int height) {
-		gsm.resize((int)(width/2f),(int) (height/2f));
-		 //????
+		gsm.resize((int)(width/1f),(int) (height/1f));
 	}
 	@Override
 	public void dispose () {
